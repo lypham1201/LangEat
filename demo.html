@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LangEat — Ẩm thực ấm áp</title>
+<style>
+  :root{
+    --accent: #ef5b3b;
+    --accent-2:#ffb84d;
+    --bg-start:#ffe9d8;
+    --bg-end:#fff5ea;
+    --card:#fffef9;
+    --text:#2d2d2d;
+    --muted:#6f6f6f;
+    --success:#2ea65a;
+  }
+  *{box-sizing:border-box;font-family:"Poppins",Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{margin:0;background: linear-gradient(180deg,var(--bg-start), var(--bg-end)); color:var(--text); -webkit-font-smoothing:antialiased;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit}
+
+  /* ===== LOGIN PAGE (full-screen hero) ===== */
+  #loginPage{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px; position:relative; }
+  .hero {
+    width:900px; max-width:96%; display:flex; gap:28px; align-items:center;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+    border-radius:20px; padding:28px; box-shadow:0 30px 80px rgba(0,0,0,0.12);
+    border-left:8px solid rgba(239,91,59,0.12);
+  }
+  .hero .left { width:360px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .logo-box{ width:180px; height:180px; border-radius:18px; overflow:hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85)); }
+  .logo-box img{width:100%; height:100%; object-fit:cover; display:block;}
+  h1.brand{ margin:0; font-size:48px; color:var(--accent); letter-spacing:1px; }
+  p.tag{ margin:0; color:var(--muted); font-size:15px; text-align:center; max-width:340px; }
+
+  .auth-actions{ width:100%; display:flex; flex-direction:column; gap:12px; margin-top:6px; align-items:center; }
+  .btn { width:92%; padding:14px 16px; border-radius:12px; font-weight:700; font-size:16px; cursor:pointer; border:none; }
+  .btn-login{ background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; box-shadow:0 14px 36px rgba(239,91,59,0.14); transition:transform .16s;}
+  .btn-login:hover{ transform:translateY(-4px); }
+  .btn-sign{ background:#fff; color:var(--accent); border:2px solid rgba(239,91,59,0.06); box-shadow:0 8px 24px rgba(0,0,0,0.06); }
+
+  .hero .right { flex:1; padding:12px 8px; display:flex; flex-direction:column; gap:12px; }
+  .login-card { background:var(--card); padding:14px; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.06); display:flex; gap:8px; flex-direction:column; }
+  .login-card input{ padding:12px; border-radius:8px; border:1px solid #f1e6de; outline:none; font-size:14px; }
+
+  /* ===== Header ===== */
+  header.appbar{
+    position:sticky; top:0; z-index:60;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; padding:10px 18px; background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:#fff; box-shadow:0 8px 30px rgba(0,0,0,0.08);
+  }
+  .brand { display:flex; gap:12px; align-items:center; }
+  .brand img{ width:56px; height:56px; border-radius:12px; object-fit:cover; box-shadow:0 10px 26px rgba(0,0,0,0.08); }
+  .brand h1{ margin:0; font-size:20px; letter-spacing:0.6px; color:#fff; }
+  .searchbar{ display:flex; align-items:center; gap:8px; background:#fff; padding:8px 12px; border-radius:12px; width:44%; max-width:600px; box-shadow:0 8px 26px rgba(0,0,0,0.06); }
+  .searchbar input{ border:none; outline:none; width:100%; font-size:14px; }
+
+  .actions{ display:flex; gap:12px; align-items:center; }
+  .icon-btn{ width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.12); }
+  .cart-badge{ position:relative; }
+  .badge{ position:absolute; top:-8px; right:-8px; background:#fff; color:var(--accent); padding:4px 7px; border-radius:999px; font-weight:800; font-size:12px; box-shadow:0 6px 14px rgba(0,0,0,0.12); }
+
+  /* ===== Main layout ===== */
+  main{ padding:18px 18px 120px 18px; max-width:1200px; margin:0 auto; display:none; }
+  .grid{ display:grid; gap:18px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
+
+  .card{ background:var(--card); border-radius:12px; padding:12px; box-shadow:0 12px 30px rgba(0,0,0,0.05); transition:transform .18s, box-shadow .18s; display:flex; flex-direction:column; }
+  .card:hover{ transform:translateY(-6px); box-shadow:0 20px 40px rgba(0,0,0,0.08); }
+  .card img{ width:100%; height:140px; object-fit:cover; border-radius:10px; display:block; }
+  .title{ margin:10px 0 6px; font-weight:700; color:var(--accent-2); }
+  .price{ color:var(--muted); font-weight:700; }
+  .actions { display:flex; gap:8px; margin-top:auto; align-items:center; justify-content:space-between; }
+
+  .btn-primary{ background:linear-gradient(180deg,var(--accent),var(--accent-2)); color:#fff; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; box-shadow:0 8px 26px rgba(239,91,59,0.12); }
+  .btn-ghost{ background:transparent; border:1px solid #ffe6d5; color:var(--accent); padding:8px 12px; border-radius:10px; cursor:pointer; }
+
+  /* filter buttons row */
+  .filter-row{ display:flex; gap:10px; align-items:center; margin:12px 0; flex-wrap:wrap; }
+
+  /* modal base */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:200; opacity:0; pointer-events:none; transition:opacity .18s; }
+  .modal-backdrop.show{ opacity:1; pointer-events:auto; }
+  .modal{ background:#fff; border-radius:12px; width:92%; max-width:920px; max-height:90vh; overflow:auto; box-shadow:0 30px 80px rgba(0,0,0,0.18); padding:18px; transform:translateY(12px); transition:transform .22s; }
+  .modal.show{ transform:translateY(0); }
+
+  /* cart modal specifics */
+  .cart-list{ display:flex; flex-direction:column; gap:12px; margin-top:6px; }
+  .cart-item{ display:flex; gap:12px; align-items:center; background:#fff7f3; padding:10px; border-radius:10px; }
+  .cart-item img{ width:72px; height:72px; object-fit:cover; border-radius:8px; }
+  .cart-item .meta{ flex:1; }
+  .qty-controls{ display:flex; gap:6px; align-items:center; }
+  .qty-controls button{ padding:6px 8px; border-radius:8px; border:none; cursor:pointer; background:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+
+  .checkout-row{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:10px; }
+
+  /* payment specifics */
+  .payment-methods{ display:flex; gap:12px; margin-top:8px; }
+  .pm{ padding:12px; border-radius:10px; border:1px solid #f1e6de; cursor:pointer; display:flex; gap:8px; align-items:center; }
+  .pm.selected{ border-color:var(--accent); box-shadow:0 10px 30px rgba(239,91,59,0.06); }
+
+  /* account modal */
+  .account-card{ width:920px; max-width:96%; background: linear-gradient(180deg, #fff, #fff8f5); border-radius:14px; padding:18px; box-shadow:0 30px 80px rgba(0,0,0,0.12); display:grid; grid-template-columns: 320px 1fr; gap:18px; align-items:start; }
+  .profile-left{ display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:flex-start; padding:12px; border-right:1px solid #f5e6df; }
+  .avatar-large{ width:160px; height:160px; border-radius:16px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 14px 36px rgba(0,0,0,0.06); }
+  .avatar-large img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .profile-summary h3{ margin:0; color:var(--accent); }
+  .profile-summary p{ margin:6px 0; color:var(--muted); font-size:14px; }
+
+  .profile-right{ padding:6px 6px; display:flex; flex-direction:column; gap:12px; }
+  .row{ display:flex; gap:10px; }
+  .col{ flex:1; display:flex; flex-direction:column; gap:6px; }
+  label.small{ font-size:13px; color:var(--muted); font-weight:700; }
+
+  input.field, textarea.field, select.field{ padding:10px; border-radius:8px; border:1px solid #efe3db; outline:none; font-size:14px; background:#fff; }
+  input.field:focus, textarea.field:focus, select.field:focus{ box-shadow:0 6px 20px rgba(255,184,77,0.12); border-color:var(--accent-2); }
+
+  .save-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+  .btn-cancel{ background:transparent; border:1px solid #f1e6de; padding:10px 12px; border-radius:10px; cursor:pointer; }
+  .btn-save{ background:var(--accent); color:#fff; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
+
+  .saved-msg{ color:var(--success); font-weight:700; margin-top:6px; }
+
+  @media (max-width:980px){
+    .account-card{ grid-template-columns: 1fr; }
+    .profile-left{ border-right:none; border-bottom:1px solid #f5e6df; padding-bottom:12px; }
+    header.appbar{ flex-direction:column; gap:8px; align-items:flex-start; padding:12px; }
+    .searchbar{ width:100%; }
+    .hero{ flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="loginPage" aria-label="Đăng nhập" 
+         style="min-height:100vh; display:flex; align-items:center; justify-content:center; background-color:#E63E2E;">
+
+  <div class="login-container" 
+       style="display:flex; flex-direction:column; align-items:center; text-align:center; width:90%; max-width:400px;">
+
+    <!-- Logo -->
+    <div class="logo-box" style="margin-bottom:20px;">
+    <img alt="LangEat logo" id="loginLogo" 
+           src="C:\Users\Administrator>C:\Users\Administrator\Downloads\Demo\Demo\Logo.png"
+           style="width:100%; height:100%; object-fit:cover; display:block;">
+    </div>
+
+    <!-- Title -->
+    <h1 class="brand" 
+        style="font-size:2.8rem; font-weight:700; color:white; margin-bottom:16px; font-family:'Poppins', sans-serif;">
+      LangEat
+    </h1>
+
+    <!-- Tagline -->
+    <p class="tagline" 
+       style="color:rgba(255,255,255,0.85); font-size:1rem; margin-bottom:36px; font-weight:400;">
+      Ẩm thực ấm áp & trái cây tươi ngon — Giao diện demo
+    </p>
+
+    <!-- Buttons -->
+    <div class="auth-actions" style="display:flex; flex-direction:column; gap:16px; width:100%; align-items:center;">
+      <button id="btnLogin"
+              style="width:220px; padding:12px 0; background:white; color:#E63E2E; border:none; border-radius:30px; font-weight:600; font-size:1rem; cursor:pointer; transition:0.3s;">
+        Log in
+      </button>
+      <button id="btnSign"
+              style="width:220px; padding:12px 0; background:#C12C22; color:white; border:none; border-radius:30px; font-weight:600; font-size:1rem; cursor:pointer; transition:0.3s;">
+        Sign up
+      </button>
+    </div>
+
+    <!-- Note -->
+    <div class="note" style="font-size:13px; color:rgba(255,255,255,0.8); margin-top:18px;">
+      Nhấn <strong>Log in</strong> để vào trang chính (demo, không cần nhập tài khoản).
+    </div>
+  </div>
+</section>
+
+
+
+<!-- HEADER (fixed) -->
+<header class="appbar" role="banner" style="display:none" id="appbar">
+  <div class="brand" 
+     style="display:flex; align-items:center; gap:10px;">
+
+  <div class="logo-box" 
+       style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+    <img alt="LangEat logo" id="headerLogo"
+         src="C:\Users\Administrator>C:\Users\Administrator\Downloads\Demo\Demo\Logo.png"
+         style="width:100%; height:100%; object-fit:cover; display:block;">
+  </div>
+
+  <h1 style="font-size:1.6rem; font-weight:700; color:white; font-family:'Poppins', sans-serif; margin:0;">
+    LangEat
+  </h1>
+</div>
+
+  <div class="searchbar" role="search">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="#999" stroke-width="2" /></svg>
+    <input id="globalSearch" placeholder="Tìm món hoặc trái cây..." aria-label="Tìm món" />
+  </div>
+
+  <div class="actions">
+    <div id="openAccountBtn" class="icon-btn" title="Tài khoản" aria-label="Tài khoản" style="background:transparent;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="#fff" stroke-width="1.4"/></svg>
+    </div>
+
+    <div id="openCartBtn" class="icon-btn cart-badge" title="Giỏ hàng" aria-label="Giỏ hàng">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12z" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1" fill="#fff"/><circle cx="18" cy="20" r="1" fill="#fff"/></svg>
+      <div class="badge" id="headerCartCount">0</div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN (hidden until login) -->
+<main id="mainPage">
+  <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+    <div style="font-weight:700; font-size:20px; color:var(--accent)">Danh sách món</div>
+    <div style="color:var(--muted)">— Chọn món và thêm vào giỏ</div>
+  </div>
+
+  <div class="filter-row">
+    <button class="btn-ghost" onclick="filterAll()">Tất cả</button>
+    <button class="btn-ghost" onclick="filterType('food')">Food</button>
+    <button class="btn-ghost" onclick="filterType('fruit')">Fruit</button>
+    <div style="flex:1"></div>
+    <button class="btn-ghost" onclick="openAccount()">Tài khoản</button>
+  </div>
+
+  <section class="grid" id="gridList" aria-live="polite"></section>
+</main>
+
+<!-- CART MODAL -->
+<div id="cartBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" id="cartModal" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+    <h3 id="cartTitle">Giỏ hàng của bạn</h3>
+    <div class="cart-list" id="cartList"></div>
+
+    <div class="checkout-row">
+      <div style="font-weight:700">Tổng:</div>
+      <div style="font-size:18px; font-weight:800" id="cartModalTotal">0đ</div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+      <button class="btn-cancel" onclick="closeCart()">Đóng</button>
+      <button class="btn-primary" onclick="openPayment()">Thanh toán</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div id="paymentBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" id="paymentModal" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+    <h3 id="paymentTitle">Xác nhận thanh toán</h3>
+
+    <div id="paymentItems" style="margin-top:8px; display:flex; flex-direction:column; gap:8px;"></div>
+    <div style="margin-top:10px; font-weight:700;">Tổng: <span id="paymentTotal">0đ</span></div>
+
+    <div style="margin-top:12px;">
+      <div style="font-weight:700; margin-bottom:6px;">Chọn phương thức thanh toán</div>
+      <div class="payment-methods">
+        <div class="pm selected" id="pmCash" onclick="choosePM('cash')">💵 Tiền mặt</div>
+        <div class="pm" id="pmTransfer" onclick="choosePM('transfer')">🏦 Chuyển khoản</div>
+      </div>
+
+      <div id="transferInfo" style="margin-top:10px; display:none; background:#fff7f3; padding:10px; border-radius:8px;">
+        <div><strong>Ngân hàng:</strong> ACB</div>
+        <div><strong>Chủ TK:</strong> LangEat Co.</div>
+        <div><strong>Số TK:</strong> 123456789</div>
+        <div style="margin-top:6px; color:var(--muted); font-size:13px;">(Demo) Sau khi chuyển, nhấn "Xác nhận thanh toán".</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn-cancel" onclick="closePayment()">Hủy</button>
+      <button class="btn-primary" onclick="confirmPayment()">Xác nhận thanh toán</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT MODAL -->
+<div id="accountBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal account-card" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+    <div class="profile-left">
+      <div class="avatar-large">
+        <img id="accAvatar" src="" alt="Avatar">
+      </div>
+      <div class="change-avatar">
+        <label style="font-size:13px;color:var(--muted)">Chọn ảnh: <input id="accAvatarInput" type="file" accept="image/*" style="display:inline-block"></label>
+      </div>
+      <div class="profile-summary">
+        <h3 id="accSummaryName">Khách</h3>
+        <p id="accSummaryRank">Hạng: <span>Thành viên thường</span></p>
+      </div>
+    </div>
+
+    <div class="profile-right">
+      <h4 style="margin:0;color:var(--accent)">🧑 Thông tin cá nhân</h4>
+      <div class="row">
+        <div class="col">
+          <label class="small">Tên tài khoản</label>
+          <input class="field" id="accName" />
+        </div>
+        <div class="col">
+          <label class="small">Hạng thành viên</label>
+          <select class="field" id="accRank">
+            <option>Thành viên thường</option>
+            <option>Thành viên Bạc</option>
+            <option>Thành viên Vàng</option>
+            <option>Thành viên Kim cương</option>
+          </select>
+        </div>
+      </div>
+
+      <h4 style="margin:8px 0 0 0;color:var(--accent)">💰 Tài chính</h4>
+      <div class="row">
+        <div class="col">
+          <label class="small">Tổng tiền đã thanh toán</label>
+          <input class="field" id="accTotalPaid" placeholder="vd: 1250000" />
+        </div>
+        <div class="col">
+          <label class="small">Tiền còn trong tài khoản</label>
+          <input class="field" id="accBalance" placeholder="vd: 500000" />
+        </div>
+      </div>
+
+      <h4 style="margin:8px 0 0 0;color:var(--accent)">🧾 Lịch sử đơn hàng</h4>
+      <div id="accOrderHistory" style="background:#fff; padding:10px; border-radius:8px; max-height:160px; overflow:auto;"></div>
+
+      <h4 style="margin:8px 0 0 0;color:var(--accent)">🏢 Thông tin sinh viên</h4>
+      <div class="row">
+        <div class="col">
+          <label class="small">Tòa / KTX</label>
+          <input class="field" id="accBuilding" />
+        </div>
+        <div class="col">
+          <label class="small">MSSV</label>
+          <input class="field" id="accMSSV" />
+        </div>
+      </div>
+
+      <h4 style="margin:8px 0 0 0;color:var(--accent)">📍 Địa chỉ giao hàng</h4>
+      <div class="row">
+        <div class="col">
+          <label class="small">Tên người nhận</label>
+          <input class="field" id="accRecvName" />
+        </div>
+        <div class="col">
+          <label class="small">Số điện thoại</label>
+          <input class="field" id="accPhone" />
+        </div>
+      </div>
+      <div style="margin-top:6px;">
+        <label class="small">Địa chỉ chi tiết</label>
+        <textarea class="field" id="accAddress" rows="3"></textarea>
+      </div>
+
+      <div class="save-actions">
+        <button class="btn-cancel" onclick="closeAccount()">Hủy</button>
+        <button class="btn-save" onclick="saveAccount()">Lưu thông tin</button>
+      </div>
+
+      <div id="accSavedMsg" class="saved-msg" style="display:none;">✅ Đã lưu thông tin</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= Initialization ================= */
+const loginPage = document.getElementById('loginPage');
+const appbar = document.getElementById('appbar');
+const mainPage = document.getElementById('mainPage');
+const btnLogin = document.getElementById('btnLogin');
+const btnSign = document.getElementById('btnSign');
+
+const headerLogo = document.getElementById('headerLogo');
+const defaultLogoBase64 = headerLogo.src;
+
+const grid = document.getElementById('gridList');
+const globalSearch = document.getElementById('globalSearch');
+const headerCartCount = document.getElementById('headerCartCount');
+
+const cartBackdrop = document.getElementById('cartBackdrop');
+const cartModal = document.getElementById('cartModal');
+const cartListEl = document.getElementById('cartList');
+const cartModalTotalEl = document.getElementById('cartModalTotal');
+
+const paymentBackdrop = document.getElementById('paymentBackdrop');
+const paymentModal = document.getElementById('paymentModal');
+const paymentItemsEl = document.getElementById('paymentItems');
+const paymentTotalEl = document.getElementById('paymentTotal');
+
+const accountBackdrop = document.getElementById('accountBackdrop');
+const accountModal = document.getElementById('accountModal');
+const accAvatar = document.getElementById('accAvatar');
+const accAvatarInput = document.getElementById('accAvatarInput');
+
+let items = []; // filled below
+let cart = JSON.parse(localStorage.getItem('langeat_cart')||'[]');
+let account = JSON.parse(localStorage.getItem('langeat_account')||'{}');
+let orders = JSON.parse(localStorage.getItem('langeat_orders')||'[]');
+let selectedPM = 'cash';
+
+/* ================= Items (50) ================= */
+items = [
+  {name:"Phở bò Hà Nội", price:45000, type:"food", img:"https://cdn.pastaxi-manager.onepas.vn/content/uploads/articles/01-Phuong-Mon%20ngon&congthuc/1.%20pho%20ha%20noi/canh-nau-pho-ha-noi-xua-mang-huong-vi-kinh-do-cua-80-nam-ve-truoc-1.jpg"},
+  {name:"Phở gà", price:42000, type:"food", img:"https://cdn.zsoft.solutions/poseidon-web/app/media/uploaded-files/200823-cach-lam-pho-ga-buffet-poseidon.jpg"},
+  {name:"Bún chả", price:38000, type:"food", img:"https://acnoshotel.com/grand/wp-content/uploads/2024/08/Acnos-bun-cha-ha-noi_02.jpg"},
+  {name:"Bún bò Huế", price:45000, type:"food", img:"https://bizweb.dktcdn.net/100/489/006/files/bun-bo-hue-1.jpg?v=1698658012086"},
+  {name:"Hủ tiếu Nam Vang", price:40000, type:"food", img:"https://ik.imagekit.io/tvlk/blog/2024/10/hu-tieu-nam-vang-6-1024x683.jpeg?tr=q-70,c-at_max,w-500,h-300,dpr-2"},
+  {name:"Cơm gà Hội An", price:50000, type:"food", img:"https://i-giadinh.vnecdn.net/2023/04/22/Bc11thnhphm111-1682135991-3741-1682135995.jpg"},
+  {name:"Cơm tấm Sườn", price:48000, type:"food", img:"https://i-giadinh.vnecdn.net/2024/03/07/7Honthinthnhphm1-1709800144-8583-1709800424.jpg"},
+  {name:"Bánh mì thịt", price:25000, type:"food", img:"https://cdn.tgdd.vn/2021/05/CookRecipe/Avatar/banh-mi-thit-bo-nuong-thumbnail-1.jpg"},
+  {name:"Gỏi cuốn", price:30000, type:"food", img:"https://khaihoanphuquoc.com.vn/wp-content/uploads/2023/11/nu%CC%9Bo%CC%9B%CC%81c-ma%CC%86%CC%81m-cha%CC%82%CC%81m-go%CC%89i-cuo%CC%82%CC%81n.png"},
+  {name:"Bánh xèo", price:36000, type:"food", img:"https://daotaobeptruong.vn/wp-content/uploads/2020/01/cach-do-banh-xeo-ngon-gion-lau.jpg"},
+  {name:"Bánh cuốn", price:30000, type:"food", img:"https://img-global.cpcdn.com/recipes/b235f5db0142062d/1200x630cq80/photo.jpg"},
+  {name:"Bánh canh cua", price:42000, type:"food", img:"https://cdn.tgdd.vn/2021/05/CookProduct/thumbcmscn-1200x676-4.jpg"},
+  {name:"Bún riêu", price:38000, type:"food", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/cach_nau_bun_rieu_cua_ha_noi_ed8278d38b.jpg"},
+  {name:"Mì Quảng", price:35000, type:"food", img:"https://nhuminhplazahotel.com/wp-content/uploads/2023/06/cach-nau-mi-quang-ga-ngon-1.jpg"},
+  {name:"Cá kho tộ", price:54000, type:"food", img:"https://beptruong.edu.vn/wp-content/uploads/2021/01/ca-kho-to.jpg"},
+  {name:"Thịt kho trứng", price:48000, type:"food", img:"https://cdn.tgdd.vn/Files/2017/03/28/965845/cach-lam-thit-kho-trung-5_760x450.jpg"},
+  {name:"Canh chua cá", price:42000, type:"food", img:"https://i-giadinh.vnecdn.net/2021/03/19/ca2-1616122035-2163-1616122469.jpg"},
+  {name:"Gà rán", price:65000, type:"food", img:"https://file.hstatic.net/200000700229/article/ga-ran-gion-1_83c75dcbff794589a4be4ae74e71c8e6.jpg"},
+  {name:"Mì xào hải sản", price:55000, type:"food", img:"https://i-giadinh.vnecdn.net/2023/03/22/Thanh-pham-1-3557-1679473358.jpg"},
+  {name:"Bò lúc lắc", price:70000, type:"food", img:"https://cdn.netspace.edu.vn/images/2020/03/29/cach-lam-bo-luc-lac-cuc-hap-dan-244972-800.jpg"},
+  {name:"Cơm chiên dương châu", price:38000, type:"food", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/com_chien_duong_chau_bao_nhieu_calo_1_9529891645.jpg"},
+  {name:"Cơm chiên trứng", price:30000, type:"food", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_23_638336575818808816_cach-lam-com-chien-trung-thumb.jpg"},
+  {name:"Nem nướng Nha Trang", price:36000, type:"food", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2024_4_5_638479384067296638_nem-nu-o-ng-nha-trang-0.jpg"},
+  {name:"Bánh bao", price:20000, type:"food", img:"https://meizanclv.com.vn/wp-content/uploads/2022/04/1-Banh-bao-nhan-thit.jpg"},
+  {name:"Xôi gà", price:30000, type:"food", img:"https://file.hstatic.net/200000700229/article/xoi-ga-xe-1_6ae68f0c65d94664a8f954fe239e922a.jpg"},
+  {name:"Phở cuốn", price:48000, type:"food", img:"https://i-giadinh.vnecdn.net/2023/04/08/Buoc-8-8-3661-1680928906.jpg"},
+  {name:"Cánh gà nướng", price:42000, type:"food", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_29_638341482942727296_canh-ga-nuong-mat-ong.jpeg"},
+  {name:"Bánh tráng trộn", price:25000, type:"food", img:"https://i-giadinh.vnecdn.net/2023/08/05/mon-7-1691221823-6409-1691221866.jpg"},
+  {name:"Cháo lòng", price:30000, type:"food", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/chao_long_mien_tay_7b68d2cae5.jpg"},
+  {name:"Bún đậu mắm tôm", price:38000, type:"food", img:"https://i-giadinh.vnecdn.net/2025/05/16/Bun-dau-mam-tom-6-vnexpress-17-9082-8722-1747388531.jpg"},
+  {name:"Xoài cát", price:22000, type:"fruit", img:"https://lh5.googleusercontent.com/proxy/LJxHIs7rI24GsME9LwnF8ivhX4-YGjCaL15nGeliT76Djaple_SYSc7IQMby1Pbc17AlD-QQsd7Uxhs6DjhQwsBsCgwweJ79TTNek0S4_haU6Ksq"},
+  {name:"Xoài tuốt", price:18000, type:"fruit", img:"https://cdn.tienphong.vn/images/a7a4eb175a75567c9a7ae09768d70948af206f7d8a6395369fccec9c04940f1c2527a323630dc16a4138cad51e4d8616ce503c820709612811ac24173b97d529869c7aafdba4362a59b7f8e3b6f8281de1ea4bd39c695733b513a3985dfeb63f/17331618_2_xoai_15607606907461874244108_TPHH.jpg"},
+  {name:"Táo đỏ", price:45000, type:"fruit", img:"https://product.hstatic.net/1000304337/product/461736070_1243984800130083_2210592862555509607_n_28fec9d8050140ff9f2b008bc244976d.png"},
+  {name:"Táo tàu", price:25000, type:"fruit", img:"https://medlatec.vn/media/34398/content/an-tao-tau-co-beo-khong-1.jpg"},
+  {name:"Dưa hấu", price:18000, type:"fruit", img:"https://cdnphoto.dantri.com.vn/ampkLLVFN5Y7T56gUVBIxdwv6ww=/thumb_w/1020/2025/08/07/dua-hau-1754523539998.jpg"},
+  {name:"Thanh long", price:26000, type:"fruit", img:"https://icdn.dantri.com.vn/dansinh/2024/08/27/thanh-long-1724776610022.jpg"},
+  {name:"Bưởi da xanh", price:38000, type:"fruit", img:"https://chanhthu.com/wp-content/uploads/2024/03/chanh-thu-buoi-da-xanh-2.jpg"},
+  {name:"Cam sành", price:30000, type:"fruit", img:"https://foody24h.vn/uploads/collections/cam-sanh-4192-2021-08-26.jpg"},
+  {name:"Nho", price:65000, type:"fruit", img:"https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/cac_loai_nho_1_7db679bf22.jpg"},
+  {name:"Chuối", price:12000, type:"fruit", img:"https://media.vov.vn/sites/default/files/styles/large/public/2023-11/tac_dung_cua_chuoi_.png.jpg"},
+  {name:"Ổi", price:18000, type:"fruit", img:"https://dbnd.1cdn.vn/2023/11/07/f21a97ea9803f9400f6d1fc51fed8fb84122d3997d82223a62d68a253ef8f6ff8e98ae864d6fd72bf6d-_cong-dung-cua-oi-1-1699287150970.jpg"},
+  {name:"Dâu tây", price:90000, type:"fruit", img:"https://ogida.vn/wwwroot/resources/upload/img/product/7-2023/66.png"},
+  {name:"Bơ", price:45000, type:"fruit", img:"https://images2.thanhnien.vn/528068263637045248/2024/6/10/bo-xanh-1718019154736227112646.jpg"},
+  {name:"Mít", price:30000, type:"fruit", img:"https://vuonnhasau.com/wp-content/uploads/2021/03/mit-to-nu-1-1.jpg"},
+  {name:"Mận", price:25000, type:"fruit", img:"https://vinfruits.com/wp-content/uploads/2023/02/1-1-800x800.png"},
+  {name:"Na (mãng cầu)", price:28000, type:"fruit", img:"https://media.baoquangninh.vn/upload/image/202308/medium/2118265_5a0cec485271b2e06fd7040fad6fa85d.jpg"},
+  {name:"Sầu riêng", price:90000, type:"fruit", img:"https://forbes.vn/wp-content/uploads/2025/06/durian_thedailymeal.jpg"},
+  {name:"Dứa (thơm)", price:16000, type:"fruit", img:"https://static.tuoitre.vn/tto/i/s626/2017/04/08/hinh-2-1491643785.jpg"},
+  {name:"Chôm chôm", price:30000, type:"fruit", img:"https://hoptacxathanhbinh.com/wp-content/uploads/2023/08/rambutan.png"},
+  {name:"Vải thiều", price:28000, type:"fruit", img:"https://vaithieu.net/wp-content/uploads/2018/01/vai-thieu-tuoi-1.png"},
+  {name:"Măng cụt", price:55000, type:"fruit", img:"https://media.vietnamplus.vn/images/7255a701687d11cb8c6bbc58a6c80785a0dfc4f7aa5abc2dd0f80e74dbb09a0170c81ff6755e4bd317e65850f9ff7ce1c41b3dad32ca851cb9b5a50a23d4c2af/mang-cut-2-838.jpg"},
+  {name:"Lê", price:36000, type:"fruit", img:"https://cdn.tgdd.vn/Products/Images/8788/223091/bhx/le-duong-hop-1kg-4-6-trai-202205111941249856.jpg"},
+  {name:"Quýt", price:22000, type:"fruit", img:"https://tfruit.com.vn/wp-content/uploads/2020/03/qu%C3%BDt.jpg"}
+];
+
+/* ================= Utilities ================= */
+function fmt(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + 'đ'; }
+function saveCart(){ localStorage.setItem('langeat_cart', JSON.stringify(cart)); updateCartBadge(); }
+function saveAccountToStorage(){ localStorage.setItem('langeat_account', JSON.stringify(account)); }
+function saveOrders(){ localStorage.setItem('langeat_orders', JSON.stringify(orders)); }
+function updateCartBadge(){ const count = cart.reduce((s,c)=>s + c.qty, 0); headerCartCount.textContent = count; }
+
+/* ================= Render grid ================= */
+function renderGrid(list){
+  grid.innerHTML = '';
+  list.forEach((it, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${it.img}" alt="${it.name}" loading="lazy" onerror="this.style.opacity=0.6">
+      <div class="title">${it.name}</div>
+      <div class="price">${fmt(it.price)}</div>
+      <div class="actions">
+        <button class="btn-primary" onclick="addToCart(${idx})">🛒 Thêm</button>
+        <button class="btn-ghost" onclick="viewDetail(${idx})">Xem</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* initial render is after login */
+
+/* ================= Search & Filter ================= */
+globalSearch.addEventListener('input', ()=>{
+  const q = (globalSearch.value||'').trim().toLowerCase();
+  if(!q) renderGrid(items);
+  else renderGrid(items.filter(i=>i.name.toLowerCase().includes(q)));
+});
+
+function filterType(t){
+  renderGrid(items.filter(i=>i.type===t));
+}
+function filterAll(){ renderGrid(items); }
+
+/* ================= Cart functions ================= */
+function addToCart(idx){
+  const found = cart.find(c=>c.idx===idx);
+  if(found){ found.qty += 1; }
+  else {
+    cart.push({ idx, name: items[idx].name, price: items[idx].price, img: items[idx].img, qty: 1 });
+  }
+  saveCart();
+  showToast('Đã thêm vào giỏ hàng');
+}
+
+function renderCartModal(){
+  cartListEl.innerHTML = '';
+  if(cart.length===0){
+    cartListEl.innerHTML = '<div style="padding:12px;color:var(--muted)">Giỏ hàng trống</div>';
+  } else {
+    cart.forEach(ci=>{
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <img src="${ci.img}" alt="${ci.name}">
+        <div class="meta">
+          <div style="font-weight:800">${ci.name}</div>
+          <div style="color:var(--muted); margin-top:6px;">${fmt(ci.price)} x ${ci.qty} = <strong>${fmt(ci.price*ci.qty)}</strong></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+          <div class="qty-controls">
+            <button onclick="changeQty(${ci.idx}, -1)">−</button>
+            <div style="padding:6px 8px; background:#fff; border-radius:6px;">${ci.qty}</div>
+            <button onclick="changeQty(${ci.idx}, 1)">+</button>
+          </div>
+          <button style="margin-top:6px; background:transparent; border:none; color:#c33; cursor:pointer;" onclick="deleteItem(${ci.idx})">✖ Xóa</button>
+        </div>
+      `;
+      cartListEl.appendChild(div);
+    });
+  }
+  cartModalTotalEl.textContent = fmt(cart.reduce((s,c)=>s + c.price*c.qty,0));
+}
+
+function openCart(){ renderCartModal(); cartBackdrop.classList.add('show'); cartModal.classList.add('show'); }
+function closeCart(){ cartBackdrop.classList.remove('show'); cartModal.classList.remove('show'); }
+document.getElementById('openCartBtn').addEventListener('click', openCart);
+
+function changeQty(idx, delta){
+  const item = cart.find(c=>c.idx===idx);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty <= 0) cart = cart.filter(c=>c.idx!==idx);
+  saveCart();
+  renderCartModal();
+}
+function deleteItem(idx){
+  cart = cart.filter(c=>c.idx!==idx);
+  saveCart();
+  renderCartModal();
+}
+
+/* ================= Payment functions ================= */
+function openPayment(){
+  if(cart.length === 0){ alert('Giỏ hàng trống'); return; }
+  populatePayment();
+  paymentBackdrop.classList.add('show');
+  paymentModal.classList.add('show');
+}
+function closePayment(){ paymentBackdrop.classList.remove('show'); paymentModal.classList.remove('show'); }
+
+function populatePayment(){
+  paymentItemsEl.innerHTML = '';
+  cart.forEach(ci=>{
+    const r = document.createElement('div');
+    r.style.display='flex'; r.style.justifyContent='space-between'; r.style.gap='12px';
+    r.innerHTML = `<div>${ci.name} × ${ci.qty}</div><div style="font-weight:800">${fmt(ci.price*ci.qty)}</div>`;
+    paymentItemsEl.appendChild(r);
+  });
+  const total = cart.reduce((s,c)=>s + c.price*c.qty,0);
+  paymentTotalEl.textContent = fmt(total);
+  choosePM('cash');
+}
+
+function choosePM(pm){
+  selectedPM = pm;
+  document.getElementById('pmCash').classList.toggle('selected', pm==='cash');
+  document.getElementById('pmTransfer').classList.toggle('selected', pm==='transfer');
+  document.getElementById('transferInfo').style.display = pm==='transfer' ? 'block' : 'none';
+}
+
+function confirmPayment(){
+  const total = cart.reduce((s,c)=>s + c.price*c.qty,0);
+  // update account: increment orders, totalPaid, deduct balance if exists
+  account = JSON.parse(localStorage.getItem('langeat_account')||'{}');
+  account.orders = Number(account.orders||0) + 1;
+  account.totalPaid = Number(account.totalPaid||0) + total;
+  if(Number(account.balance)) {
+    account.balance = Math.max(0, Number(account.balance) - total);
+  }
+  // save order to orders history
+  const order = {
+    id: 'ORD' + Date.now(),
+    items: cart.map(c=>({ name:c.name, price:c.price, qty:c.qty })),
+    total: total,
+    method: selectedPM,
+    date: new Date().toISOString()
+  };
+  orders.unshift(order);
+  saveOrders();
+  // clear cart
+  cart = [];
+  saveCart();
+  // persist account
+  saveAccountToStorage();
+  // UI updates & feedback
+  closePayment();
+  closeCart();
+  showToast('✅ Thanh toán thành công!');
+  // refresh account modal content if open
+  renderAccountOrders();
+}
+
+/* ================= Account modal ================= */
+document.getElementById('openAccountBtn').addEventListener('click', ()=> {
+  loadAccountDataToModal();
+  accountBackdrop.classList.add('show');
+  accountModal.classList.add('show');
+});
+
+function openAccount(){ document.getElementById('openAccountBtn').click(); }
+function closeAccount(){ accountBackdrop.classList.remove('show'); accountModal.classList.remove('show'); }
+
+accAvatarInput.addEventListener('change', function(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){ accAvatar.src = ev.target.result; }
+  reader.readAsDataURL(f);
+});
+
+function loadAccountDataToModal(){
+  account = JSON.parse(localStorage.getItem('langeat_account')||'{}');
+  document.getElementById('accName').value = account.name || (JSON.parse(localStorage.getItem('langeat_user')||'{}').name || 'Khách');
+  document.getElementById('accRank').value = account.rank || 'Thành viên thường';
+  document.getElementById('accTotalPaid').value = account.totalPaid || '';
+  document.getElementById('accBalance').value = account.balance || '';
+  document.getElementById('accBuilding').value = account.building || '';
+  document.getElementById('accMSSV').value = account.mssv || '';
+  document.getElementById('accRecvName').value = account.recvName || '';
+  document.getElementById('accPhone').value = account.phone || '';
+  document.getElementById('accAddress').value = account.address || '';
+  if(account.avatar) accAvatar.src = account.avatar; else accAvatar.src = defaultLogoBase64;
+  document.getElementById('accSummaryName').textContent = document.getElementById('accName').value || 'Khách';
+  document.getElementById('accSummaryRank').textContent = 'Hạng: ' + (document.getElementById('accRank').value || 'Thành viên thường');
+  renderAccountOrders();
+}
+
+function saveAccount(){
+  account = {
+    name: document.getElementById('accName').value.trim(),
+    rank: document.getElementById('accRank').value,
+    totalPaid: Number(document.getElementById('accTotalPaid').value || 0),
+    balance: Number(document.getElementById('accBalance').value || 0),
+    orders: Number((account.orders||0)),
+    building: document.getElementById('accBuilding').value.trim(),
+    mssv: document.getElementById('accMSSV').value.trim(),
+    recvName: document.getElementById('accRecvName').value.trim(),
+    phone: document.getElementById('accPhone').value.trim(),
+    address: document.getElementById('accAddress').value.trim(),
+    avatar: accAvatar.src || defaultLogoBase64
+  };
+  saveAccountToStorage();
+  document.getElementById('accSavedMsg').style.display = 'block';
+  setTimeout(()=> document.getElementById('accSavedMsg').style.display = 'none', 1800);
+  if(account.avatar) headerLogo.src = account.avatar;
+  renderAccountOrders();
+}
+
+function renderAccountOrders(){
+  const el = document.getElementById('accOrderHistory');
+  el.innerHTML = '';
+  if(orders.length===0){ el.innerHTML = '<div style="color:var(--muted)">Chưa có đơn hàng</div>'; return; }
+  orders.forEach(h=>{
+    const d = document.createElement('div');
+    d.style.borderBottom='1px dashed #f0e6df';
+    d.style.padding='8px 0';
+    d.innerHTML = `<div style="font-weight:700">${h.id} - ${new Date(h.date).toLocaleString()}</div>
+                   <div style="color:var(--muted); font-size:13px;">${h.items.map(it=> `${it.name} x${it.qty}`).join(' • ')}</div>
+                   <div style="font-weight:800; margin-top:6px;">${fmt(h.total)} • ${h.method}</div>`;
+    el.appendChild(d);
+  });
+}
+
+/* ================= Login & Signup logic ================= */
+btnLogin.addEventListener('click', ()=>{
+  // show appbar + main, hide login hero
+  loginPage.style.display = 'none';
+  appbar.style.display = 'flex';
+  mainPage.style.display = 'block';
+  // render grid & update UI
+  renderGrid(items);
+  updateCartBadge();
+  // load small account avatar if any
+  account = JSON.parse(localStorage.getItem('langeat_account')||'{}');
+  if(account.avatar) { headerLogo.src = account.avatar; document.getElementById('loginLogo').src = account.avatar; }
+});
+
+btnSign.addEventListener('click', ()=>{
+  const name = document.getElementById('demoName').value.trim();
+  const email = document.getElementById('demoEmail').value.trim();
+  if(!name || !email){
+    showToast('Vui lòng nhập Tên và Email để đăng ký demo');
+    return;
+  }
+  const user = { name, email, created: Date.now() };
+  localStorage.setItem('langeat_user', JSON.stringify(user));
+  showToast('Đăng ký demo thành công!');
+});
+
+/* ================= Utilities & UI ================= */
+function viewDetail(i){
+  const it = items[i];
+  alert(it.name + "\nGiá: " + fmt(it.price) + "\nLoại: " + it.type);
+}
+
+function showToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.position='fixed';
+  t.style.right='18px';
+  t.style.bottom='100px';
+  t.style.background='rgba(0,0,0,0.8)';
+  t.style.color='#fff';
+  t.style.padding='10px 14px';
+  t.style.borderRadius='8px';
+  t.style.zIndex=9999;
+  document.body.appendChild(t);
+  setTimeout(()=> t.style.opacity='0', 1400);
+  setTimeout(()=> t.remove(), 2200);
+}
+
+/* modal backdrop click to close */
+cartBackdrop.addEventListener('click', (e)=>{ if(e.target.id==='cartBackdrop') closeCart(); });
+paymentBackdrop.addEventListener('click', (e)=>{ if(e.target.id==='paymentBackdrop') closePayment(); });
+accountBackdrop.addEventListener('click', (e)=>{ if(e.target.id==='accountBackdrop') closeAccount(); });
+
+/* keyboard close */
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeCart(); closePayment(); closeAccount(); } });
+
+/* initial load from storage */
+(function init(){
+  orders = JSON.parse(localStorage.getItem('langeat_orders')||'[]');
+  account = JSON.parse(localStorage.getItem('langeat_account')||'{}');
+  if(account.avatar) { headerLogo.src = account.avatar; document.getElementById('loginLogo').src = account.avatar; }
+  updateCartBadge();
+})();
+</script>
+</body>
+</html>
